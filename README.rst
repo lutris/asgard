@@ -31,6 +31,14 @@ Installing Dependencies on Ubuntu::
 Preparing your game
 -------------------
 
+Old games can be just as tricky to install from their original media as they
+are to run them. This can be worked around by installing the games in a virtual
+machine but this a cumbersome process. It's possible that Asgard will take care
+of extracting games from their original media in the future. The servers
+hosting the demos for the Loki games are almost all down and installing them
+required some scripting. An ISO image containing the `Loki demos`_ already
+extracted is available to all.
+
 Place the fully installed game files in a subfolder in `games`. Name the
 subfolder with the name of the game executable (For exemple: `sc3u` for Sim
 City 3000, `civctp_demo` for the Call to Power demo)
@@ -54,16 +62,16 @@ Tested games
 
 The following games have run successfully on Pop!_OS 20.04.
 
- - Civilization: Call to Power
- - Descent 3
- - Doom 3
- - Heretic 2
- - Heavy Metal FAKK2
- - Jamestown
- - Railroad Tycoon 2
- - Rune
- - Sim City 3000 Unlimited
- - Soldier of Fortune
+- Civilization: Call to Power
+- Descent 3
+- Doom 3
+- Heretic 2
+- Heavy Metal FAKK2
+- Jamestown
+- Railroad Tycoon 2
+- Rune
+- Sim City 3000 Unlimited
+- Soldier of Fortune
 
 Credits
 -------
@@ -72,5 +80,7 @@ Asgard is brought to you by the `Lutris`_ team. All content is under GPL v3.
 
 If you like this project, please consider `supporting the project`_.
 
+
+.. _Loki demos: https://mega.nz/file/7kg3CbwD#BeEgx0PInfVGLiJEZlo3JmKzT4_kpo_bWdEBSjQvHg0
 .. _Lutris: https://lutris.net
 .. _supporting the project: https://patreon.com/lutris
