@@ -11,14 +11,17 @@ if [[ ! -d "$GAMES_DIR/$GAME_NAME" ]]; then
     exit 2
 fi
 
-rm -rf game
-cp -r "$GAMES_DIR/$GAME_NAME" "$ROOT_DIR/game"
-sed -i -e 's/^DetectARCH()/DetectARCH\(\)\n{\n\techo "x86"\n}\nIntoTheVOID\(\)/' game/$GAME_NAME
-echo "cd game" > bashrc
-echo "if [ -e "${GAME_NAME}.sh" ]; then ./${GAME_NAME}.sh; else ./${GAME_NAME}; fi" >> bashrc
-echo "exit" >> bashrc
+if [[ -d "build" ]]; then
+    echo "A build may still be in progress. Please make sure no build is running then delete the 'build' folder."
+    exit 2
+fi
+cp -r "$GAMES_DIR/$GAME_NAME" "$ROOT_DIR/build"
+sed -i -e 's/^DetectARCH()/DetectARCH\(\)\n{\n\techo "x86"\n}\nIntoTheVOID\(\)/' build/$GAME_NAME
+echo "cd game" > start.sh
+echo "if [ -e "${GAME_NAME}.sh" ]; then ./${GAME_NAME}.sh; else ./${GAME_NAME}; fi" >> start.sh
+echo "exit" >> start.sh
 
-docker build -t "$GAME_NAME" -f Dockerfile .
+docker build -t "$GAME_NAME" .
 
-rm -r game
-rm bashrc
+rm -r build
+rm start.sh

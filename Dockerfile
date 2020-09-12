@@ -37,21 +37,21 @@ ENV MESA_EXTENSION_MAX_YEAR=2000
 
 # Symlink libGL to a known location for old games.
 RUN ln -s /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/libGL.so
-#
+
+# Copy a subset of the "Loki compat libs" to a standard location.
+# This has only been useful for Civ:CTP so far.
+COPY lib/* /usr/lib/
+
 # Run as a regular user
 ENV USER=loki
 RUN useradd -ms /bin/bash $USER
 RUN usermod --uid 1000 "$USER"
 RUN groupmod --gid 1000 "$USER"
-
-# Copy a subset of the "Loki compat libs" to a standard location.
-# This has only been useful for Civ:CTP so far.
-COPY lib/* /usr/lib/
-COPY ./game /home/loki/game
-COPY ./bashrc /home/loki/.bashrc
-
+WORKDIR /home/loki
+COPY ./build /home/loki/game
+COPY ./start.sh /home/loki/start.sh
+RUN cat /etc/skel/.bashrc start.sh > .bashrc
 RUN chown 1000:1000 -R /home/loki/game
 USER $USER
 
-WORKDIR /home/loki
 CMD ["bash"]

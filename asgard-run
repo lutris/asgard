@@ -10,15 +10,14 @@ docker run \
     --privileged \
     --network host \
     --device /dev/snd \
-    --group-add=audio \
-    --group-add $(getent group audio | cut -d: -f3) \
     --device /dev/dri \
+    --group-add=audio \
     -v /etc/machine-id:/etc/machine-id \
     -v /var/lib/dbus:/var/lib/dbus \
     -e PULSE_SERVER=unix:${XDG_RUNTIME_DIR}/pulse/native \
     -v ${XDG_RUNTIME_DIR}/pulse/native:${XDG_RUNTIME_DIR}/pulse/native \
     -v ${HOME}/.config/pulse/cookie:/root/.config/pulse/cookie \
-    -v "$sourcedir:/opt/game/source:rw" \
+    --group-add $(getent group audio | cut -d: -f3) \
     -v "${HOME}/.Xauthority:/home/loki/.Xauthority:rw" \
     -v "${HOME}/.loki:/home/loki/.loki:rw" \
     -v "${HOME}/.quake4:/home/loki/.quake4:rw" \
@@ -28,5 +27,4 @@ docker run \
     -v "/media/cdrom:/cdrom" \
     --env=DISPLAY \
     --env=XDG_RUNTIME_DIR=/run/user/$uid \
-    ${DOCKER_FLAGS} \
     $DOCKER_IMAGE
