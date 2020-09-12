@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -e
+
+ROOT_DIR="$(pwd)"
+GAMES_DIR="$ROOT_DIR/games"
+GAME_NAME=$1
+
+if [[ ! -d "$GAMES_DIR/$GAME_NAME" ]]; then
+    echo "$GAME_NAME is not present in the games folder"
+    exit 2
+fi
+
+rm -rf game
+cp -r "$GAMES_DIR/$GAME_NAME" "$ROOT_DIR/game"
+sed -i -e 's/^DetectARCH()/DetectARCH\(\)\n{\n\techo "x86"\n}\nIntoTheVOID\(\)/' game/$GAME_NAME
+echo "cd game" > bashrc
+echo "if [ -e "${GAME_NAME}.sh" ]; then ./${GAME_NAME}.sh; else ${GAME_NAME}; fi" >> bashrc
+echo "exit" >> bashrc
+
+docker build -t "$GAME_NAME" -f Dockerfile .
+
+rm -r game
+rm bashrc
