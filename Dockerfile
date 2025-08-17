@@ -10,7 +10,7 @@ FROM i386/ubuntu:16.04
 RUN \
   apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
-        libglib2.0 \
+        libaudiofile1 \
         libasound2-data \
         libasound2 \
         libasound2-plugins \
@@ -38,6 +38,8 @@ ENV MESA_EXTENSION_MAX_YEAR=2000
 
 # Symlink libGL to a known location for old games.
 RUN ln -s /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/libGL.so
+# Symlink libaudiofile.so to a known location for Heavy Gear 2.
+RUN ln -s /usr/lib/i386-linux-gnu/libaudiofile.so.1 /usr/lib/libaudiofile.so.0
 
 # Copy a subset of the "Loki compat libs" to a standard location.
 # This has only been useful for Civ:CTP so far.
