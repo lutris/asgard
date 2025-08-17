@@ -3,6 +3,29 @@
 set -e
 DOCKER_IMAGE=$1
 
+#Xephyr :1 -screen 1280x1024 -fullscreen & # 1280x1024
+Xwayland -geometry 1280x1024 :1 -fullscreen &
+X_PID=$!
+export DISPLAY=:1
+
+echo "PID of nexted X server: $X_PID"
+
+# This is needed because Xephyr and Xwayland don't close after the game does
+# and for some reason every time new ossp-padsp process is created
+# and never terminated, which after some time causes crackling.
+# -9 is there bcs otherwise it doesn't want to die
+cleanup(){
+    echo "Performing cleanup..."
+    kill $X_PID
+    for pid in $(pidof ossp-padsp); do
+        echo "Killing $pid"
+        kill -9 "$pid"
+    done
+}
+
+trap 'cleanup' ERR
+trap 'cleanup' EXIT
+
 uid=$(id -u)
 docker run \
     -it \
