@@ -35,6 +35,8 @@ RUN \
 # Some games break while printing the current list of GL extensions. This
 # setting only expose extension made before a given year.
 ENV MESA_EXTENSION_MAX_YEAR=2000
+# Do the same for Nvidia
+ENV __GL_ExtensionStringVersion=17700
 
 # Symlink libGL to a known location for old games.
 RUN ln -s /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/libGL.so
