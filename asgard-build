@@ -16,12 +16,17 @@ if [[ -d "build" ]]; then
     exit 2
 fi
 cp -r "$GAMES_DIR/$GAME_NAME" "$ROOT_DIR/build"
-sed -i -e 's/^DetectARCH()/DetectARCH\(\)\n{\n\techo "x86"\n}\nIntoTheVOID\(\)/' build/$GAME_NAME
+sed -i -e 's/^DetectARCH()/DetectARCH\(\)\n{\n\techo "x86"\n}\nIntoTheVOID\(\)/' "build/$GAME_NAME"
 echo "cd game" > start.sh
-echo "if [ -e "${GAME_NAME}.sh" ]; then ./${GAME_NAME}.sh; else ./${GAME_NAME}; fi" >> start.sh
+echo "if [ -e ${GAME_NAME}.sh ]; then ./${GAME_NAME}.sh; else ./${GAME_NAME}; fi" >> start.sh
 echo "exit" >> start.sh
 
-docker build -t "$GAME_NAME" .
+USER_UID=$(id -u)
+USER_GID=$(id -g)
+docker build \
+    --build-arg USER_UID="$USER_UID" \
+    --build-arg USER_GID="$USER_GID" \
+    -t "$GAME_NAME" .
 
-rm -r build
+rm -rf build
 rm start.sh

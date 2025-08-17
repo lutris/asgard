@@ -10,6 +10,7 @@ FROM i386/ubuntu:16.04
 RUN \
   apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
+        libglib2.0 \
         libasound2-data \
         libasound2 \
         libasound2-plugins \
@@ -43,15 +44,17 @@ RUN ln -s /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/libGL.so
 COPY lib/* /usr/lib/
 
 # Run as a regular user
+ARG USER_UID
+ARG USER_GID
 ENV USER=loki
 RUN useradd -ms /bin/bash $USER
-RUN usermod --uid 1000 "$USER"
-RUN groupmod --gid 1000 "$USER"
+RUN usermod --uid $USER_UID "$USER"
+RUN groupmod --gid $USER_GID "$USER"
 WORKDIR /home/loki
 COPY ./build /home/loki/game
 COPY ./start.sh /home/loki/start.sh
 RUN cat /etc/skel/.bashrc start.sh > .bashrc
-RUN chown 1000:1000 -R /home/loki/game
+RUN chown $USER_UID:$USER_GID -R /home/loki/
 USER $USER
 
 CMD ["bash"]
