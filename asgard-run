@@ -3,7 +3,7 @@
 set -e
 DOCKER_IMAGE=$1
 
-#Xephyr :1 -screen 1280x1024 -fullscreen & # 1280x1024
+#Xephyr :1 -screen 1280x1024 -fullscreen 2> /dev/null & # 1280x1024
 Xwayland -geometry 1280x1024 :1 -fullscreen 2> /dev/null &
 X_PID=$!
 export DISPLAY=:1
