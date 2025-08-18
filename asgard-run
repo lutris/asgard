@@ -4,10 +4,14 @@ set -e
 DOCKER_IMAGE=$1
 
 if [ "$XDG_SESSION_TYPE" = "wayland" ]; then
-    #Xephyr :1 -screen 1280x1024 -fullscreen 2> /dev/null & # 1280x1024
-    Xwayland -geometry 1280x1024 :1 -fullscreen 2> /dev/null &
+    # Find the top display number
+    maxdisplay=$(cd /tmp/.X11-unix && for x in X*; do echo "${x#X}"; done | tail -1)
+    # 1280x1024 seems to be the optimal res. 
+    # For Xwayland it doesn't really matter, it can resize itself
+    #Xephyr :$((maxdisplay + 1)) -screen 1280x1024 -fullscreen 2> /dev/null & Xprovider=Xephyr
+    Xwayland -geometry 1280x1024 :$((maxdisplay + 1)) -fullscreen 2> /dev/null & Xprovider=Xwayland
     X_PID=$!
-    export DISPLAY=:1
+    export DISPLAY=:$((maxdisplay + 1))
     echo "PID of nexted X server: $X_PID"
 fi
 
@@ -17,9 +21,12 @@ fi
 # -9 is there bcs otherwise it doesn't want to die
 cleanup(){
     echo "Performing cleanup..."
-    [ ! -z "$X_PID" ] && kill "$X_PID"
+    if [ ! -z "$X_PID" ] && [ "$(ps -p "$X_PID" -o comm=)" = "$Xprovider" ]; then
+        printf "Killing nested X server %s\n" "$Xprovider"
+        kill "$X_PID"
+    fi
     for pid in $(pidof ossp-padsp); do
-        echo "Killing $pid"
+        echo "Killing oss-padsp ($pid)"
         kill -9 "$pid"
     done
 }
