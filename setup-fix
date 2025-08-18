@@ -3,7 +3,9 @@
 # The old scripts have outdated syntax, depricated utilities like fgrep
 # and issues like unquoted cd $(dirname $0) that can fail if path has spaces
 
-# shellcheck disable=SC2016
+[ -z "$1" ] && printf "Please specify path to the setup.sh file provided by Loki Software\n" && exit
+[ ! -w "$1" ] && printf "The specified file is not writable, make sure you extracted files from the ISO image\n" && exit
+
 sed -i 's|`\([^`]*\)`|$(\1)|g'                  "$1"
 sed -i 's|function \(.*\)|\1()|g'               "$1"
 sed -i 's|fgrep|grep -F|g'                      "$1"
