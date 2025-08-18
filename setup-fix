@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# A script to fix onld setup.sh scripts provided by Loki Software.
+# The old scripts have outdated syntax, depricated utilities like fgrep
+# and issues like unquoted cd $(dirname $0) that can fail if path has spaces
+
+# shellcheck disable=SC2016
+sed -i 's|`\([^`]*\)`|$(\1)|g'                  "$1"
+sed -i 's|function \(.*\)|\1()|g'               "$1"
+sed -i 's|fgrep|grep -F|g'                      "$1"
+sed -i 's|\$\*|"\$\@"|g'                        "$1"
+sed -i 's| $(dirname $0)| "$(dirname "$0")"|g'  "$1"
