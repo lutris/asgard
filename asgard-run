@@ -24,7 +24,6 @@ cleanup(){
     done
 }
 
-trap 'cleanup' ERR
 trap 'cleanup' EXIT
 
 uid=$(id -u)
