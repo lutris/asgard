@@ -81,6 +81,6 @@ Asgard is brought to you by the `Lutris`_ team. All content is under GPL v3.
 If you like this project, please consider `supporting the project`_.
 
 
-.. _Loki demos: https://mega.nz/file/7kg3CbwD#BeEgx0PInfVGLiJEZlo3JmKzT4_kpo_bWdEBSjQvHg0
+.. _Loki demos: https://archive.org/details/loki-demos
 .. _Lutris: https://lutris.net
 .. _supporting the project: https://patreon.com/lutris
