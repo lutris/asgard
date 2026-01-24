@@ -11,6 +11,7 @@ RUN \
   apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
         libaudiofile1 \
+        strace \
         libasound2-data \
         libasound2 \
         libasound2-plugins \

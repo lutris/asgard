@@ -1,42 +1,57 @@
 #!/usr/bin/env bash
 
 set -e
-DOCKER_IMAGE=$1
 
-if [ "$XDG_SESSION_TYPE" = "wayland" ]; then
-    # Find the top display number
-    maxdisplay=$(cd /tmp/.X11-unix && for x in X*; do echo "${x#X}"; done | tail -1)
-    # 1280x1024 seems to be the optimal res. 
-    # For Xwayland it doesn't really matter, it can resize itself
-    #Xephyr :$((maxdisplay + 1)) -screen 1280x1024 -fullscreen 2> /dev/null & Xprovider=Xephyr
-    Xwayland -geometry 1280x1024 :$((maxdisplay + 1)) -fullscreen 2> /dev/null & Xprovider=Xwayland
-    X_PID=$!
-    export DISPLAY=:$((maxdisplay + 1))
-    echo "PID of nexted X server: $X_PID"
+GAME_NAME=$1
+ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+GAMES_DIR="$ROOT_DIR/games"
+
+# Defaults (can be overridden by per-game asgard.cfg)
+GAMESCOPE_WIDTH=${GAMESCOPE_WIDTH:-1280}
+GAMESCOPE_HEIGHT=${GAMESCOPE_HEIGHT:-1024}
+USE_GAMESCOPE=${USE_GAMESCOPE:-1}
+USE_PADSP=${USE_PADSP:-1}
+SOFTWARE_GL=${SOFTWARE_GL:-0}
+MESA_YEAR=${MESA_YEAR:-}
+SAVE_DIRS=()  # Array of "host_dir:container_dir" pairs
+LAUNCH_CMD=""  # Custom launch command (default: ./<game> or ./<game>.sh)
+USE_STRACE=${USE_STRACE:-0}  # Workaround for games with init race conditions
+
+# Source per-game config if it exists
+if [[ -f "$ROOT_DIR/config/$GAME_NAME.cfg" ]]; then
+    source "$ROOT_DIR/config/$GAME_NAME.cfg"
 fi
 
-# This is needed because Xephyr and Xwayland don't close after the game does
-# and for some reason every time new ossp-padsp process is created
-# and never terminated, which after some time causes crackling.
-# -9 is there bcs otherwise it doesn't want to die
-cleanup(){
-    echo "Performing cleanup..."
-    if [ ! -z "$X_PID" ] && [ "$(ps -p "$X_PID" -o comm=)" = "$Xprovider" ]; then
-        printf "Killing nested X server %s\n" "$Xprovider"
-        kill "$X_PID"
-    fi
-    for pid in $(pidof ossp-padsp); do
-        echo "Killing oss-padsp ($pid)"
-        kill -9 "$pid"
-    done
-}
+DOCKER_EXTRA_ARGS=()
+if [[ "$SOFTWARE_GL" == "1" ]]; then
+    DOCKER_EXTRA_ARGS+=(-e LIBGL_ALWAYS_SOFTWARE=1)
+fi
+if [[ -n "$MESA_YEAR" ]]; then
+    DOCKER_EXTRA_ARGS+=(-e "MESA_EXTENSION_MAX_YEAR=$MESA_YEAR")
+fi
+for save_dir in "${SAVE_DIRS[@]}"; do
+    host_dir="${save_dir%%:*}"
+    container_dir="${save_dir#*:}"
+    mkdir -p "$host_dir"
+    DOCKER_EXTRA_ARGS+=(-v "$host_dir:$container_dir:rw")
+done
 
-trap 'cleanup' EXIT
+PADSP_CMD=""
+if [[ "$USE_PADSP" == "1" ]]; then
+    PADSP_CMD="padsp"
+fi
+
+xhost +local:docker > /dev/null 2>&1
+
+GAMESCOPE_CMD=""
+if [[ "$USE_GAMESCOPE" == "1" ]]; then
+    GAMESCOPE_CMD="gamescope -w $GAMESCOPE_WIDTH -h $GAMESCOPE_HEIGHT --"
+fi
 
 uid=$(id -u)
-docker run \
-    -it \
-    -e DISPLAY="$DISPLAY" \
+$GAMESCOPE_CMD docker run \
+    --rm \
+    -e DISPLAY=$DISPLAY \
     --privileged \
     --network host \
     --device /dev/snd \
@@ -44,17 +59,20 @@ docker run \
     --group-add=audio \
     -v /etc/machine-id:/etc/machine-id \
     -v /var/lib/dbus:/var/lib/dbus \
-    -e PULSE_SERVER=unix:"${XDG_RUNTIME_DIR}/pulse/native" \
-    -v "${XDG_RUNTIME_DIR}/pulse/native:${XDG_RUNTIME_DIR}/pulse/native" \
-    -v "${XDG_CONFIG_HOME:-$HOME/.config}/pulse/cookie":/home/loki/.config/pulse/cookie \
-    --group-add "$(getent group audio | cut -d: -f3)" \
-    -v "${XAUTHORITY:-$HOME/.Xauthority}:/home/loki/.Xauthority:rw" \
-    -v "${XDG_DATA_HOME:-$HOME/.local/share}/loki:/home/loki/.loki:rw" \
-    -v "${XDG_DATA_HOME:-$HOME/.local/share}/quake4:/home/loki/.quake4:rw" \
-    -v "${XDG_DATA_HOME:-$HOME/.local/share}/hyperion:/home/loki/.hyperion:rw" \
+    -e PULSE_SERVER=unix:${XDG_RUNTIME_DIR}/pulse/native \
+    -v ${XDG_RUNTIME_DIR}/pulse/native:${XDG_RUNTIME_DIR}/pulse/native \
+    -v ${HOME}/.config/pulse/cookie:/root/.config/pulse/cookie \
+    --group-add $(getent group audio | cut -d: -f3) \
+    -v "${HOME}/.Xauthority:/home/loki/.Xauthority:rw" \
+    -v "${HOME}/.loki:/home/loki/.loki:rw" \
     -v "/tmp/.X11-unix:/tmp/.X11-unix:rw" \
     -v "${XDG_RUNTIME_DIR}:/run/loki/$uid:rw" \
     -v "/media/cdrom:/cdrom" \
     --env=DISPLAY \
-    --env=XDG_RUNTIME_DIR="/run/user/$uid" \
-    "$DOCKER_IMAGE"
+    --env=XDG_RUNTIME_DIR=/run/user/$uid \
+    "${DOCKER_EXTRA_ARGS[@]}" \
+    -e GAME_NAME="$GAME_NAME" \
+    -e LAUNCH_CMD="$LAUNCH_CMD" \
+    -e USE_STRACE="$USE_STRACE" \
+    $GAME_NAME \
+    bash -c 'cd /home/loki/game && export LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH && STRACE="" && [ "$USE_STRACE" = "1" ] && STRACE="strace -e trace=none -o /dev/null -f" && if [ -n "$LAUNCH_CMD" ]; then $STRACE $LAUNCH_CMD; elif [ -e "${GAME_NAME}.sh" ]; then $STRACE ./${GAME_NAME}.sh; else $STRACE ./${GAME_NAME}; fi'
