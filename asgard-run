@@ -37,9 +37,9 @@ for save_dir in "${SAVE_DIRS[@]}"; do
     DOCKER_EXTRA_ARGS+=(-v "$host_dir:$container_dir:rw")
 done
 
-PADSP_CMD=""
-if [[ "$USE_PADSP" == "1" ]]; then
-    PADSP_CMD="padsp"
+# Pass /dev/dsp if available (OSS emulation via snd-pcm-oss kernel module)
+if [[ -e /dev/dsp ]]; then
+    DOCKER_EXTRA_ARGS+=(--device /dev/dsp)
 fi
 
 xhost +local:docker > /dev/null 2>&1
@@ -62,7 +62,7 @@ $GAMESCOPE_CMD docker run \
     -v /var/lib/dbus:/var/lib/dbus \
     -e PULSE_SERVER=unix:${XDG_RUNTIME_DIR}/pulse/native \
     -v ${XDG_RUNTIME_DIR}/pulse/native:${XDG_RUNTIME_DIR}/pulse/native \
-    -v ${HOME}/.config/pulse/cookie:/root/.config/pulse/cookie \
+    -v ${HOME}/.config/pulse/cookie:/home/loki/.config/pulse/cookie:ro \
     --group-add $(getent group audio | cut -d: -f3) \
     -v "${HOME}/.Xauthority:/home/loki/.Xauthority:rw" \
     -v "${HOME}/.loki:/home/loki/.loki:rw" \
@@ -76,5 +76,6 @@ $GAMESCOPE_CMD docker run \
     -e LAUNCH_CMD="$LAUNCH_CMD" \
     -e PRE_LAUNCH="$PRE_LAUNCH" \
     -e USE_STRACE="$USE_STRACE" \
+    -e USE_PADSP="$USE_PADSP" \
     $GAME_NAME \
-    bash -c 'cd /home/loki/game && export LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH && [ -n "$PRE_LAUNCH" ] && eval "$PRE_LAUNCH"; STRACE="" && [ "$USE_STRACE" = "1" ] && STRACE="strace -e trace=none -o /dev/null -f" && if [ -n "$LAUNCH_CMD" ]; then $STRACE $LAUNCH_CMD; elif [ -e "${GAME_NAME}.sh" ]; then $STRACE ./${GAME_NAME}.sh; else $STRACE ./${GAME_NAME}; fi'
+    bash -c 'cd /home/loki/game && export LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH && [ -n "$PRE_LAUNCH" ] && eval "$PRE_LAUNCH"; STRACE="" && [ "$USE_STRACE" = "1" ] && STRACE="strace -e trace=none -o /dev/null -f"; PADSP="" && [ "$USE_PADSP" = "1" ] && PADSP="padsp"; if [ -n "$LAUNCH_CMD" ]; then $STRACE $PADSP $LAUNCH_CMD; elif [ -e "${GAME_NAME}.sh" ]; then $STRACE $PADSP ./${GAME_NAME}.sh; else $STRACE $PADSP ./${GAME_NAME}; fi'
