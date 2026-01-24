@@ -18,6 +18,8 @@ LAUNCH_CMD=""  # Custom launch command (default: ./<game> or ./<game>.sh)
 PRE_LAUNCH=""  # Commands to run inside the container before launching the game
 USE_STRACE=${USE_STRACE:-0}  # Workaround for games with init race conditions
 GAMESCOPE_ARGS=""  # Extra gamescope arguments
+HOST_WRAPPER=""  # Command to wrap the docker run (e.g. "pasuspender --" to free /dev/dsp)
+EXTRA_ENV=""  # Extra environment variable to pass into container (KEY=VALUE)
 
 # Source per-game config if it exists
 if [[ -f "$ROOT_DIR/config/$GAME_NAME.cfg" ]]; then
@@ -39,8 +41,13 @@ for save_dir in "${SAVE_DIRS[@]}"; do
 done
 
 # Pass /dev/dsp if available (OSS emulation via snd-pcm-oss kernel module)
+# Note: --privileged exposes all /dev/dsp* devices; use SDL_PATH_DSP env var to select one
 if [[ -e /dev/dsp ]]; then
     DOCKER_EXTRA_ARGS+=(--device /dev/dsp)
+fi
+
+if [[ -n "$EXTRA_ENV" ]]; then
+    DOCKER_EXTRA_ARGS+=(-e "$EXTRA_ENV")
 fi
 
 xhost +local:docker > /dev/null 2>&1
@@ -51,7 +58,7 @@ if [[ "$USE_GAMESCOPE" == "1" ]]; then
 fi
 
 uid=$(id -u)
-$GAMESCOPE_CMD docker run \
+$GAMESCOPE_CMD $HOST_WRAPPER docker run \
     --rm \
     -e DISPLAY=$DISPLAY \
     --privileged \
