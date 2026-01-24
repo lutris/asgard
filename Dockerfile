@@ -31,7 +31,8 @@ RUN \
         libsdl-sound1.2 \
         libsdl-image1.2 \
         libxml2 \
-        pulseaudio-utils && \
+        pulseaudio-utils \
+        xdotool && \
   rm -rf /var/lib/apt/lists/*
 
 # Some games break while printing the current list of GL extensions. This
