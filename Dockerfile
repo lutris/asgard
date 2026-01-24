@@ -41,7 +41,8 @@ ENV MESA_EXTENSION_MAX_YEAR=2000
 ENV __GL_ExtensionStringVersion=17700
 
 # Symlink libGL to a known location for old games.
-RUN ln -s /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/libGL.so
+RUN ln -s /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/libGL.so && \
+    ln -s /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/libGL.so.1
 # Symlink libaudiofile.so to a known location for Heavy Gear 2.
 RUN ln -s /usr/lib/i386-linux-gnu/libaudiofile.so.1 /usr/lib/libaudiofile.so.0
 
