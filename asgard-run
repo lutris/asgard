@@ -17,6 +17,7 @@ SAVE_DIRS=()  # Array of "host_dir:container_dir" pairs
 LAUNCH_CMD=""  # Custom launch command (default: ./<game> or ./<game>.sh)
 PRE_LAUNCH=""  # Commands to run inside the container before launching the game
 USE_STRACE=${USE_STRACE:-0}  # Workaround for games with init race conditions
+GAMESCOPE_ARGS=""  # Extra gamescope arguments
 
 # Source per-game config if it exists
 if [[ -f "$ROOT_DIR/config/$GAME_NAME.cfg" ]]; then
@@ -46,7 +47,7 @@ xhost +local:docker > /dev/null 2>&1
 
 GAMESCOPE_CMD=""
 if [[ "$USE_GAMESCOPE" == "1" ]]; then
-    GAMESCOPE_CMD="gamescope -w $GAMESCOPE_WIDTH -h $GAMESCOPE_HEIGHT --"
+    GAMESCOPE_CMD="gamescope -w $GAMESCOPE_WIDTH -h $GAMESCOPE_HEIGHT $GAMESCOPE_ARGS --"
 fi
 
 uid=$(id -u)
