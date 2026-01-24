@@ -15,6 +15,7 @@ SOFTWARE_GL=${SOFTWARE_GL:-0}
 MESA_YEAR=${MESA_YEAR:-}
 SAVE_DIRS=()  # Array of "host_dir:container_dir" pairs
 LAUNCH_CMD=""  # Custom launch command (default: ./<game> or ./<game>.sh)
+PRE_LAUNCH=""  # Commands to run inside the container before launching the game
 USE_STRACE=${USE_STRACE:-0}  # Workaround for games with init race conditions
 
 # Source per-game config if it exists
@@ -73,6 +74,7 @@ $GAMESCOPE_CMD docker run \
     "${DOCKER_EXTRA_ARGS[@]}" \
     -e GAME_NAME="$GAME_NAME" \
     -e LAUNCH_CMD="$LAUNCH_CMD" \
+    -e PRE_LAUNCH="$PRE_LAUNCH" \
     -e USE_STRACE="$USE_STRACE" \
     $GAME_NAME \
-    bash -c 'cd /home/loki/game && export LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH && STRACE="" && [ "$USE_STRACE" = "1" ] && STRACE="strace -e trace=none -o /dev/null -f" && if [ -n "$LAUNCH_CMD" ]; then $STRACE $LAUNCH_CMD; elif [ -e "${GAME_NAME}.sh" ]; then $STRACE ./${GAME_NAME}.sh; else $STRACE ./${GAME_NAME}; fi'
+    bash -c 'cd /home/loki/game && export LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH && [ -n "$PRE_LAUNCH" ] && eval "$PRE_LAUNCH"; STRACE="" && [ "$USE_STRACE" = "1" ] && STRACE="strace -e trace=none -o /dev/null -f" && if [ -n "$LAUNCH_CMD" ]; then $STRACE $LAUNCH_CMD; elif [ -e "${GAME_NAME}.sh" ]; then $STRACE ./${GAME_NAME}.sh; else $STRACE ./${GAME_NAME}; fi'
