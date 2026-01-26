@@ -11,12 +11,12 @@ GAMESCOPE_WIDTH=${GAMESCOPE_WIDTH:-1280}
 GAMESCOPE_HEIGHT=${GAMESCOPE_HEIGHT:-1024}
 USE_GAMESCOPE=${USE_GAMESCOPE:-1}
 USE_PADSP=${USE_PADSP:-1}
-SOFTWARE_GL=${SOFTWARE_GL:-0}
+SOFTWARE_GL=${SOFTWARE_GL:-1}
 MESA_YEAR=${MESA_YEAR:-}
 SAVE_DIRS=()  # Array of "host_dir:container_dir" pairs
 LAUNCH_CMD=""  # Custom launch command (default: ./<game> or ./<game>.sh)
 PRE_LAUNCH=""  # Commands to run inside the container before launching the game
-USE_STRACE=${USE_STRACE:-0}  # Workaround for games with init race conditions
+USE_STRACE=${USE_STRACE:-1}  # Workaround for games with init race conditions
 GAMESCOPE_ARGS=""  # Extra gamescope arguments
 HOST_WRAPPER=""  # Command to wrap the docker run (e.g. "pasuspender --" to free /dev/dsp)
 EXTRA_ENV=""  # Extra environment variable to pass into container (KEY=VALUE)
